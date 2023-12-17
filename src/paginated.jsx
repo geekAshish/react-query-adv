@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 function Products() {
@@ -15,16 +15,18 @@ function Products() {
     });
 
     const { data: products } = useQuery({
-        queryKey: ['products'],
+        queryKey: ['products', limit, skip],
         queryFn: async () => {
             const data = await fetch(`https://dummyjson.com/products?limit=${limit}&skip=${skip}`).then((res) => res.json());
             return data.products;
         },
+        // To hold content space, while next data is loading
+        placeholderData: keepPreviousData,
     });
 
     const handlePagination = (moveCount) => {
         setSkip((prevSkip)=> {
-            return prevSkip + moveCount;
+            return Math.max(prevSkip + moveCount, 0);
         });
     }
 
