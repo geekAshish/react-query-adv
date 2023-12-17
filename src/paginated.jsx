@@ -1,9 +1,22 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+
+// for debouncing using lodash debounce
+import { debounce } from 'lodash';
 
 function Products() {
-    const [limit] = useState(4);
-    const [skip, setSkip] = useState(0);
+    // it's a good practice, if reload the page will stay at the same pagination
+    const [searchParams, setSearchParams] = useSearchParams({limit: 4, skip: 0})
+    const limit = parseInt(searchParams.get('limit') || 0); // if limit is undefined set 0
+    const skip = parseInt(searchParams.get('skip') || 0); // if skip is undefined set 0
+
+    // Adding search filter
+    const q = searchParams.get('q') || '';
+
+
+    // It's not a good practice to save filters in useState(), we could get it from url params
+    // const [limit] = useState(4);
+    // const [skip, setSkip] = useState(0);
 
     const { data: categories } = useQuery({
         queryKey: ['categories'],
@@ -17,7 +30,7 @@ function Products() {
     const { data: products } = useQuery({
         queryKey: ['products', limit, skip],
         queryFn: async () => {
-            const data = await fetch(`https://dummyjson.com/products?limit=${limit}&skip=${skip}`).then((res) => res.json());
+            const data = await fetch(`https://dummyjson.com/products/search?limit=${limit}&skip=${skip}&q=${q}`).then((res) => res.json());
             return data.products;
         },
         // To hold content space, while next data is loading
@@ -25,9 +38,10 @@ function Products() {
     });
 
     const handlePagination = (moveCount) => {
-        setSkip((prevSkip)=> {
-            return Math.max(prevSkip + moveCount, 0);
-        });
+        setSearchParams((prev) => {
+            prev.set('skip', Math.max(skip + moveCount, 0))
+            return prev;
+        })
     }
 
     return (
@@ -42,7 +56,13 @@ function Products() {
                     <div>
                         <div className="relative mt-2 rounded-md flex items-center gap-8 mb-4">
                             <input
-                                onChange={() => {}}
+                                onChange={debounce((e) => {
+                                    setSearchParams((prev) => {
+                                        prev.set('q', e.target.value);
+                                        prev.set('skip', 0);
+                                        return prev;
+                                    })
+                                }, 400)}
                                 type="text"
                                 name="price"
                                 id="price"
