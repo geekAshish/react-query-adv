@@ -1,16 +1,44 @@
 {
-    "posts": [
-        {
-            "id": 1,
-            "title": "Node js is awesome"
-        },
-        {
-            "id": 2,
-            "title": "JavaScript is cool"
-        },
-        {
-            "id": 3,
-            "title": "Software development"
-        }
-    ]
+  "posts": [
+    {
+      "id": 1,
+      "title": "Node js is awesome"
+    },
+    {
+      "id": 2,
+      "title": "JavaScript is cool"
+    },
+    {
+      "id": 3,
+      "title": "Software development"
+    },
+    {
+      "id": 1702795850186,
+      "title": "ashish kushwaha"
+    },
+    {
+      "id": 1702796255919,
+      "title": "react query is awesome"
+    },
+    {
+      "id": 1702796289626,
+      "title": "typesript is cool"
+    },
+    {
+      "id": 1702796472364,
+      "title": "ashish"
+    },
+    {
+      "id": 1702796488126,
+      "title": "tanstack"
+    },
+    {
+      "id": 1702797356594,
+      "title": "ashish"
+    },
+    {
+      "id": 1702797433944,
+      "title": "kushwaha"
+    }
+  ]
 }

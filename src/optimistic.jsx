@@ -1,4 +1,13 @@
-import React from 'react';
+// https://tanstack.com/query/latest/docs/react/guides/optimistic-updates
+// 1. update via UI
+// 2. update via cache
+
+// When to use what
+// If you only have one place where the optimistic result should be shown, using variables and updating the UI directly is the approach that requires less code and is generally easier to reason about. For example, you don't need to handle rollbacks at all.
+
+// However, if you have multiple places on the screen that would require to know about the update, manipulating the cache directly will take care of this for you automatically.
+
+
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { queryClient } from './main';
 
@@ -12,7 +21,7 @@ const Optimistic = () => {
             return response;
         },
     });
-    const { mutate, isError } = useMutation({
+    const { mutate, isError, isPending, variables } = useMutation({
         mutationFn: (newProduct) =>
             fetch('http://localhost:3000/posts', {
                 method: 'POST',
@@ -35,6 +44,10 @@ const Optimistic = () => {
         mutate(post);
     };
 
+    const handleRetry = (post) => {
+        mutate(post);
+    }
+
     return (
         <>
             <div className="p-4 flex gap-12">
@@ -54,7 +67,17 @@ const Optimistic = () => {
                 <div className="flex-1">
                     <h2 className="text-lg font-bold mb-4">Posts:</h2>
                     <ul>
-                        {isError && <p className="text-red-500">Something went wrong</p>}
+                        {
+                            isPending && <li className="border p-2 mb-4 opacity-40" key={variables.id}>
+                            Adding... {variables.title}
+                        </li>
+                        }
+                        {isError && <li className="flex justify-between border p-2 mb-4 opacity-40" key={variables.id}>
+                            <p className='text-red-500'>{variables.title} - failed to add</p>
+                            <button className='text-blue-500' onClick={() => {
+                                handleRetry(variables);
+                            }}>retry</button>
+                        </li>}
 
                         {posts?.map((post) => {
                             return (
