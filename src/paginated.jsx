@@ -13,6 +13,9 @@ function Products() {
     // Adding search filter
     const q = searchParams.get('q') || '';
 
+    // Adding dropdown filter
+    const category = searchParams.get('category') || '';
+
 
     // It's not a good practice to save filters in useState(), we could get it from url params
     // const [limit] = useState(4);
@@ -27,14 +30,19 @@ function Products() {
         },
     });
 
-    const { data: products } = useQuery({
-        queryKey: ['products', limit, skip],
+    const { data } = useQuery({
+        queryKey: ['products', limit, skip, q, category],
         queryFn: async () => {
-            const data = await fetch(`https://dummyjson.com/products/search?limit=${limit}&skip=${skip}&q=${q}`).then((res) => res.json());
-            return data.products;
+            let url = `https://dummyjson.com/products/search?limit=${limit}&skip=${skip}&q=${q}`;
+            if(category) {
+                url = `https://dummyjson.com/products/category/${category}?limit=${limit}&skip=${skip}`
+            }
+            const data = await fetch(url).then((res) => res.json());
+            return data;
         },
         // To hold content space, while next data is loading
         placeholderData: keepPreviousData,
+        staleTime: 20000, // for caching
     });
 
     const handlePagination = (moveCount) => {
@@ -60,6 +68,7 @@ function Products() {
                                     setSearchParams((prev) => {
                                         prev.set('q', e.target.value);
                                         prev.set('skip', 0);
+                                        prev.delete('category');
                                         return prev;
                                     })
                                 }, 400)}
@@ -69,7 +78,14 @@ function Products() {
                                 className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                 placeholder="IPhone"
                             />
-                            <select className="border p-2" onChange={() => {}}>
+                            <select className="border p-2" onChange={(e) => {
+                                setSearchParams((prev) => {
+                                    prev.set('category', e.target.value);
+                                    prev.set('skip', 0);
+                                    prev.delete('q'); // you can delete query parameter from url
+                                    return prev;
+                                })
+                            }}>
                                 <option>Select category</option>
                                 {categories?.map((category) => (
                                     <option key={category} value={category}>
@@ -81,7 +97,7 @@ function Products() {
                     </div>
 
                     <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
-                        {products?.map((product) => (
+                        {data?.products?.map((product) => (
                             <div key={product.id} className="group relative">
                                 <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-md bg-gray-200 lg:aspect-none group-hover:opacity-75 lg:h-64">
                                     <img
@@ -115,11 +131,13 @@ function Products() {
 
                     <div className="flex gap-2 mt-12">
                         <button
-                            className={`bg-purple-500 px-4 py-1 text-white rounded ${skip === 0 ? 'disable' : ''}`}
+                            disabled={skip === 0 ? true : false}
+                            className={`bg-purple-500 px-4 py-1 text-white rounded`}
                             onClick={() => {handlePagination(-limit)}}>
                             Prev
                         </button>
                         <button
+                            disabled={data?.total <= (skip + limit) ? true : false}
                             className="bg-purple-500 px-4 py-1 text-white rounded"
                             onClick={() => {handlePagination(limit)}}>
                             Next
